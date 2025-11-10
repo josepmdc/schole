@@ -1,4 +1,5 @@
 django
 djangorestframework
 django-types
+django-cors-headers
 drf-spectacular

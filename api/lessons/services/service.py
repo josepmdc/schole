@@ -132,7 +132,7 @@ class ExerciseService:
             raise ValidationError("Solution must contain at least one data point.")
         
         y_values = [point.y for point in solution]
-        rng = max(y_values) - min(y_values)
+        min_y, max_y = min(y_values), max(y_values)
 
         exercise = RangeExercise.objects.get(id=exercise_id)
 
@@ -142,19 +142,19 @@ class ExerciseService:
             case ConstraintType.LT:
                 if upper_bound is None:
                     raise RuntimeError("invalid data: 'upper_bound' was unexpectedly None")
-                return rng < upper_bound
+                return max_y < upper_bound
 
             case ConstraintType.GT:
                 if lower_bound is None:
                     raise RuntimeError("invalid data: 'lower_bound' was unexpectedly None")
-                return rng > lower_bound
+                return min_y > lower_bound
 
             case ConstraintType.BETWEEN:
                 if lower_bound is None:
                     raise RuntimeError("invalid data: 'lower_bound' was unexpectedly None")
                 if upper_bound is None:
                     raise RuntimeError("invalid data: 'upper_bound' was unexpectedly None")
-                return rng >= lower_bound and rng <= upper_bound
+                return min_y >= lower_bound and max_y <= upper_bound
 
             case _ as unexpected:
                 assert_never(unexpected) # exhaustiveness check

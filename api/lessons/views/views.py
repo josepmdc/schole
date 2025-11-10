@@ -10,13 +10,6 @@ from lessons.serializers.lesson import EvaluateSolutionResponseSerializer, Evalu
 from lessons.services.service import ExerciseService, RangeExerciseDataPointDto
 
 class RangeExerciseViewSet(viewsets.ViewSet):
-    def get_serializer_class(self): # type: ignore
-        if self.action == 'create':
-            return RangeExerciseCreateSerializer
-        elif self.action == 'evaluate':
-            return EvaluateSolutionSerializer
-        return RangeExerciseResponseSerializer
-
     @extend_schema(
         responses=RangeExerciseResponseSerializer,
         description="Get a range exercise by ID"
@@ -68,12 +61,12 @@ class RangeExerciseViewSet(viewsets.ViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    @action(methods=["POST"], url_path="evaluate", detail=True)
     @extend_schema(
         request=EvaluateSolutionSerializer,
         responses=EvaluateSolutionResponseSerializer,
         description="Evaluate an exercise's solution",
     )
+    @action(methods=["POST"], url_path="evaluate", detail=True)
     def evaluate(self, req: Request, pk: UUID) -> Response:
         try:
             serializer = EvaluateSolutionSerializer(data=req.data)
