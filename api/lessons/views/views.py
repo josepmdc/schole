@@ -10,6 +10,13 @@ from lessons.serializers.lesson import EvaluateSolutionResponseSerializer, Evalu
 from lessons.services.service import ExerciseService, RangeExerciseDataPointDto
 
 class RangeExerciseViewSet(viewsets.ViewSet):
+    def get_serializer_class(self): # type: ignore
+        if self.action == 'create':
+            return RangeExerciseCreateSerializer
+        elif self.action == 'evaluate':
+            return EvaluateSolutionSerializer
+        return RangeExerciseResponseSerializer
+
     @extend_schema(
         responses=RangeExerciseResponseSerializer,
         description="Get a range exercise by ID"
