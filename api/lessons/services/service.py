@@ -1,102 +1,160 @@
+import datetime
 from typing import List, Optional, cast
-
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
-
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
 from django.db.models import Max
 from lessons.models import RangeExercise
 from lessons.models.lesson import Lesson
-from lessons.models.range_exercise import RangeExerciseDataPoint, TargetType, assert_never
+from lessons.models.range_exercise import RangeExerciseDataPoint, ConstraintType, assert_never
 
 @dataclass
-class RangeExerciseDataPointData:
-    """Defines the expected payload structure for a single RangePoint."""
+class RangeExerciseDataPointCreateDto:
     x: float
     y: float
     size: float
 
 @dataclass
-class RangeExerciseData:
-    """
-    Defines the expected payload structure for creating a RangeExercise
-    """
+class RangeExerciseDataPointDto:
+    id: UUID
+    x: float
+    y: float
+    size: float
+
+@dataclass
+class RangeExerciseCreateDto:
     title: str
-    order: int
     description: str
-    target_type: TargetType
-    target_y_min: Optional[float] = None
-    target_y_max: Optional[float] = None
+    constraint_type: ConstraintType
+    lower_bound: Optional[float] = None
+    upper_bound: Optional[float] = None
     is_active: bool = True
     
-    points: List[RangeExerciseDataPoint] = field(default_factory=list)
+    points: List[RangeExerciseDataPointCreateDto] = field(default_factory=list)
 
-def _get_next_lesson_order() -> int:
-    max_order = (Lesson.objects
-                     # important! we need to lock DB to prevent a race condition
-                     .select_for_update()
-                     .aggregate(max_order=Max('order'))['max_order'])
+@dataclass
+class RangeExerciseResponseDto:
+    id: UUID
+    order: int
+    title: str
+    description: str
+    constraint_type: ConstraintType
+    lower_bound: Optional[float]
+    upper_bound: Optional[float]
+    is_active: bool
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+    data_points: List[RangeExerciseDataPointDto]
 
-    return (max_order or 0) + 1
-
-def create_range_exercise(data: RangeExerciseData) -> RangeExercise:
-    if not data.points:
-        # Raise Django's ValidationError directly
-        raise ValidationError("RangeExercise must contain at least one data point.", code='missing_points')
-
-    with transaction.atomic():
-        # TODO: for now all lessons will be appended. It would be good to allow reordering lessons on a separate endpoint
-        order = _get_next_lesson_order()
-
-        exercise = RangeExercise(
-            id=uuid4(),
-            title="title",
-            target_type=data.target_type,
-            target_y_min=data.target_y_min,
-            target_y_max=data.target_y_max,
-            description=data.description,
-            order=order,
+    @classmethod
+    def from_model(cls, exercise: RangeExercise) -> 'RangeExerciseResponseDto':
+        return cls(
+            id=exercise.id,
+            order=exercise.order,
+            title=exercise.title,
+            description=exercise.description,
+            constraint_type=ConstraintType(exercise.constraint_type),
+            lower_bound=exercise.lower_bound,
+            upper_bound=exercise.upper_bound,
+            is_active=exercise.is_active,
+            created_at=exercise.created_at,
+            updated_at=exercise.updated_at,
+            data_points=[
+                RangeExerciseDataPointDto(id=point.id, x=point.x, y=point.y, size=point.size)
+                for point in exercise.data_points.all()
+            ]
         )
 
-        exercise.save()
+class ExerciseService:
+    @staticmethod
+    def _get_next_lesson_order() -> int:
+        """Get the next order value for lessons, preventing a race condition"""
+        max_order = (
+            Lesson.objects
+            .select_for_update() # lock DB to prevent a race condition
+            .aggregate(max_order=Max('order'))['max_order']
+        )
+        return (max_order or 0) + 1
 
-        points = [
-            RangeExerciseDataPoint(
-                x=point.x,
-                y=point.y,
-                size=point.size,
-                exercise=exercise,
+    @staticmethod
+    def get(exercise_id: UUID) -> RangeExerciseResponseDto:
+        try:
+            exercise = RangeExercise.objects.prefetch_related('data_points').get(id=exercise_id)
+            return RangeExerciseResponseDto.from_model(exercise)
+        except RangeExercise.DoesNotExist:
+            raise ObjectDoesNotExist(f"RangeExercise with id {exercise_id} not found")
+
+    @staticmethod
+    def create_range_exercise(data: RangeExerciseCreateDto) -> RangeExerciseResponseDto:
+        if not data.points:
+            raise ValidationError(
+                "RangeExercise must contain at least one data point.",
+                code='missing_points'
             )
-            for point in data.points
-        ]
+        
+        with transaction.atomic():
+            # TODO: allow lesson reordering, maybe on a separate endpoint
+            order = ExerciseService._get_next_lesson_order()
 
-        RangeExerciseDataPoint.objects.bulk_create(points)
+            exercise = RangeExercise(
+                id=uuid4(),
+                title=data.title,
+                constraint_type=data.constraint_type,
+                lower_bound=data.lower_bound,
+                upper_bound=data.upper_bound,
+                description=data.description,
+                is_active=data.is_active,
+                order=order,
+            )
 
-    return exercise
+            exercise.save()
 
-def evaluate_solution(exercise_id: UUID, solution: List[RangeExerciseDataPointData]):
-    y_values = [point.y for point in solution]
-    min_y, max_y = min(y_values), max(y_values)
+            points = [
+                RangeExerciseDataPoint(
+                    x=point.x,
+                    y=point.y,
+                    size=point.size,
+                    exercise=exercise,
+                )
+                for point in data.points
+            ]
 
-    exercise = RangeExercise.objects.get(id=exercise_id)
+            RangeExerciseDataPoint.objects.bulk_create(points)
 
-    match cast(TargetType, exercise.target_type):
-        case TargetType.LT:
-            if (target_y_min := exercise.target_y_min) is None:
-                raise RuntimeError("DB rule violation: 'target_y_min' was unexpectedly None. Check DB insert logic.")
-            return min_y > target_y_min
-        case TargetType.GT:
-            if (target_y_max := exercise.target_y_max) is None:
-                raise RuntimeError("DB rule violation: 'target_y_max' was unexpectedly None. Check DB insert logic.")
-            return max_y > target_y_max
-        case TargetType.BETWEEN:
-            if (target_y_max := exercise.target_y_max) is None:
-                raise RuntimeError("DB rule violation: 'target_y_max' was unexpectedly None. Check DB insert logic.")
-            if (target_y_min := exercise.target_y_min) is None:
-                raise RuntimeError("DB rule violation: 'target_y_min' was unexpectedly None. Check DB insert logic.")
-            return min_y <= target_y_min and max_y > target_y_max
-        case _ as unexpected:
-            # this line will make sure that if a new enum value is added and not
-            # handled in the match, the static analyzer will report an error
-            assert_never(unexpected)
+            exercise.refresh_from_db()
+
+        return RangeExerciseResponseDto.from_model(exercise)
+
+    @staticmethod
+    def evaluate_solution(exercise_id: UUID, solution: List[RangeExerciseDataPointDto]) -> bool:
+        if not solution:
+            raise ValidationError("Solution must contain at least one data point.")
+        
+        y_values = [point.y for point in solution]
+        rng = max(y_values) - min(y_values)
+
+        exercise = RangeExercise.objects.get(id=exercise_id)
+
+        lower_bound, upper_bound = exercise.lower_bound, exercise.upper_bound
+
+        match cast(ConstraintType, exercise.constraint_type):
+            case ConstraintType.LT:
+                if upper_bound is None:
+                    raise RuntimeError("invalid data: 'upper_bound' was unexpectedly None")
+                return rng < upper_bound
+
+            case ConstraintType.GT:
+                if lower_bound is None:
+                    raise RuntimeError("invalid data: 'lower_bound' was unexpectedly None")
+                return rng > lower_bound
+
+            case ConstraintType.BETWEEN:
+                if lower_bound is None:
+                    raise RuntimeError("invalid data: 'lower_bound' was unexpectedly None")
+                if upper_bound is None:
+                    raise RuntimeError("invalid data: 'upper_bound' was unexpectedly None")
+                return rng >= lower_bound and rng <= upper_bound
+
+            case _ as unexpected:
+                assert_never(unexpected) # exhaustiveness check

@@ -3,120 +3,120 @@ from django.test import TestCase
 from django.db import transaction
 from uuid import uuid4
 
-from lessons.models.range_exercise import RangeExercise, RangeExerciseDataPoint, TargetType
+from lessons.models.range_exercise import RangeExercise, RangeExerciseDataPoint, ConstraintType
 
 class RangeExerciseValidationsTest(TestCase):
-    def _create_test_exercise(self, target_type, y_min, y_max) -> RangeExercise:
+    def _create_test_exercise(self, constraint_type, lower_bound, upper_bound) -> RangeExercise:
         """creates a range exercise with sane defaults for testing"""
         return RangeExercise(
             id=uuid4(),
             title="title",
-            target_type=target_type,
-            target_y_min=y_min,
-            target_y_max=y_max,
+            constraint_type=constraint_type,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
             description="Test exercise",
             order=1
         )
 
-    def test_target_type_not_set(self):
-        """given target_type is not set, a ValidationError is raised"""
+    def test_constraint_type_not_set(self):
+        """given constraint_type is not set, a ValidationError is raised"""
         with self.assertRaises(ValidationError):
             self._create_test_exercise(
-                target_type="",
-                y_min=1.1,
-                y_max=1.1,
+                constraint_type="",
+                lower_bound=1.1,
+                upper_bound=1.1,
             ).save()
 
     def test_lt_ok(self):
-        """given target_type is LT, min is set and max is not, it should succeed"""
+        """given constraint_type is LT, lower bound is set and upper bound is not, it should succeed"""
         self._create_test_exercise(
-            target_type=TargetType.LT,
-            y_min=2.2,
-            y_max=None,
+            constraint_type=ConstraintType.LT,
+            lower_bound=None,
+            upper_bound=2.2,
         ).save()
 
-    def test_lt_min_is_none(self):
-        """given target_type is LT, min is not set, it should fail"""
+    def test_lt_uper_is_none(self):
+        """given constraint_type is LT, upper bound is not set, it should fail"""
         with self.assertRaises(ValidationError):
             self._create_test_exercise(
-                target_type=TargetType.LT,
-                y_min=None,
-                y_max=None,
+                constraint_type=ConstraintType.LT,
+                lower_bound=None,
+                upper_bound=None,
             ).save()
 
-    def test_lt_max_is_set(self):
-        """given target_type is LT and max is set, it should fail"""
+    def test_lt_lower_is_set(self):
+        """given constraint_type is LT and lower bound is set, it should fail"""
         with self.assertRaises(ValidationError):
             self._create_test_exercise(
-                target_type=TargetType.LT,
-                y_min=2.2,
-                y_max=3.2,
+                constraint_type=ConstraintType.LT,
+                lower_bound=2.2,
+                upper_bound=3.2,
             ).save()
 
     def test_gt_ok(self):
-        """given target_type is GT, min is not set and max is set, it should succeed"""
+        """given constraint_type is GT, upper bound is not set and lower bound is set, it should succeed"""
         self._create_test_exercise(
-            target_type=TargetType.GT,
-            y_min=None,
-            y_max=2.2,
+            constraint_type=ConstraintType.GT,
+            lower_bound=2.2,
+            upper_bound=None,
         ).save()
 
-    def test_gt_max_is_none(self):
-        """given target_type is GT and max is None, a ValidationError is raised"""
+    def test_gt_lower_is_none(self):
+        """given constraint_type is GT and lower bound is None, a ValidationError is raised"""
         with self.assertRaises(ValidationError):
             self._create_test_exercise(
-                target_type=TargetType.GT,
-                y_min=None,
-                y_max=None,
+                constraint_type=ConstraintType.GT,
+                upper_bound=None,
+                lower_bound=None,
             ).save()
 
-    def test_gt_min_is_set(self):
-        """given target_type is GT and min is set, it should fail"""
+    def test_gt_upper_is_set(self):
+        """given constraint_type is GT and lower bound is set, it should fail"""
         with self.assertRaises(ValidationError):
             self._create_test_exercise(
-                target_type=TargetType.GT,
-                y_min=2.2,
-                y_max=3.2,
+                constraint_type=ConstraintType.GT,
+                lower_bound=2.2,
+                upper_bound=3.2,
             ).save()
 
     def test_between_ok(self):
-        """given target_type is BETWEEN, min is set and max is set, it should succeed"""
+        """given constraint_type is BETWEEN, lower bound is set and upper bound is set, it should succeed"""
         self._create_test_exercise(
-            target_type=TargetType.BETWEEN,
-            y_min=2.2,
-            y_max=3.2,
+            constraint_type=ConstraintType.BETWEEN,
+            lower_bound=2.2,
+            upper_bound=3.2,
         ).save()
 
-    def test_between_min_is_none(self):
-        """given target_type is BETWEEN and min is None, it should fail"""
+    def test_between_upper_is_none(self):
+        """given constraint_type is BETWEEN and upper bound is None, it should fail"""
         with self.assertRaises(ValidationError):
             self._create_test_exercise(
-                target_type=TargetType.BETWEEN,
-                y_min=None,
-                y_max=3.2,
+                constraint_type=ConstraintType.BETWEEN,
+                lower_bound=2.2,
+                upper_bound=None,
             ).save()
 
-    def test_between_max_is_none(self):
-        """given target_type is BETWEEN and max is None, it should fail"""
+    def test_between_lower_is_none(self):
+        """given constraint_type is BETWEEN and lower is None, it should fail"""
         with self.assertRaises(ValidationError):
             self._create_test_exercise(
-                target_type=TargetType.BETWEEN,
-                y_min=2.2,
-                y_max=None,
+                constraint_type=ConstraintType.BETWEEN,
+                lower_bound=None,
+                upper_bound=3.2,
             ).save()
 
-    def test_min_gt_max(self):
-        """given min is greater than max, an error should be returned"""
+    def test_lower_gt_upper(self):
+        """given lower bound is greater than upper bound, an error should be returned"""
         with self.assertRaises(ValidationError):
             self._create_test_exercise(
-                target_type=TargetType.BETWEEN,
-                y_min=3.2,
-                y_max=2.2,
+                constraint_type=ConstraintType.BETWEEN,
+                lower_bound=3.2,
+                upper_bound=2.2,
             ).save()
 
     def test_get_data_points(self):
         """given an exercise we can add data point to it"""
-        exercise = self._create_test_exercise(TargetType.BETWEEN, 2.2, 4.3)
+        exercise = self._create_test_exercise(ConstraintType.BETWEEN, 2.2, 4.3)
         data_points = [
             RangeExerciseDataPoint(x=1+i, y=2+i, size=3+i, exercise=exercise)
             for i in range(0, 5)
