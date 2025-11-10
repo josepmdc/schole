@@ -1,0 +1,7 @@
+# shadcn
+app/components/ui/*
+
+# openapi generated code
+app/lib/api/*
+
+pnpm-lock.yaml

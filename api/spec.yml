@@ -1,0 +1,390 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /api/exercises/:
+    post:
+      operationId: exercises_create
+      description: Create a new range exercise
+      tags:
+      - exercises
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RangeExerciseCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RangeExerciseCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RangeExerciseCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RangeExerciseResponse'
+          description: ''
+  /api/exercises/{id}/:
+    get:
+      operationId: exercises_retrieve
+      description: Get a range exercise by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - exercises
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RangeExerciseResponse'
+          description: ''
+  /api/exercises/{id}/evaluate/:
+    post:
+      operationId: exercises_evaluate_create
+      description: Evaluate an exercise's solution
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - exercises
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluateSolution'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EvaluateSolution'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EvaluateSolution'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluateSolutionResponse'
+          description: ''
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+components:
+  schemas:
+    ConstraintTypeEnum:
+      enum:
+      - lt
+      - gt
+      - between
+      type: string
+      description: |-
+        * `lt` - lt
+        * `gt` - gt
+        * `between` - between
+    EvaluateSolution:
+      type: object
+      properties:
+        solution:
+          type: array
+          items:
+            $ref: '#/components/schemas/RangeExerciseDataPoint'
+      required:
+      - solution
+    EvaluateSolutionResponse:
+      type: object
+      properties:
+        is_correct:
+          type: boolean
+      required:
+      - is_correct
+    RangeExerciseCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        constraint_type:
+          $ref: '#/components/schemas/ConstraintTypeEnum'
+        lower_bound:
+          type: number
+          format: double
+          nullable: true
+        upper_bound:
+          type: number
+          format: double
+          nullable: true
+        is_active:
+          type: boolean
+          default: true
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/RangeExerciseDataPointCreate'
+      required:
+      - constraint_type
+      - description
+      - points
+      - title
+    RangeExerciseDataPoint:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: double
+        size:
+          type: number
+          format: double
+      required:
+      - id
+      - size
+      - x
+      - y
+    RangeExerciseDataPointCreate:
+      type: object
+      properties:
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: double
+        size:
+          type: number
+          format: double
+          minimum: 0
+      required:
+      - size
+      - x
+      - y
+    RangeExerciseResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        constraint_type:
+          type: string
+        constraint_type_display:
+          type: string
+        lower_bound:
+          type: number
+          format: double
+          nullable: true
+        upper_bound:
+          type: number
+          format: double
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        data_points:
+          type: array
+          items:
+            $ref: '#/components/schemas/RangeExerciseDataPoint'
+      required:
+      - constraint_type
+      - constraint_type_display
+      - created_at
+      - data_points
+      - description
+      - id
+      - is_active
+      - lower_bound
+      - order
+      - title
+      - updated_at
+      - upper_bound
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
