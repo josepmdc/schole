@@ -56,7 +56,7 @@ export default function Home() {
     });
   };
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return <Loading />;
   }
 
@@ -67,7 +67,13 @@ export default function Home() {
           <div className="m-10 lg:w-1/3 flex flex-col">
             <div className="grow">
               <h1>Exercise 1</h1>
-              <p>Move around the data point to make the range be between 200 and 500</p>
+              <p>
+                Move around the data point to make the range be
+                {data.constraint_type == "between" &&
+                  `between ${data.lower_bound} and ${data.upper_bound}`}
+                {data.constraint_type == "lt" && `less than ${data.upper_bound}`}
+                {data.constraint_type == "gt" && `greater than ${data.lower_bound}`}
+              </p>
             </div>
             <div className="flex justify-center">
               <button className="p-2 m-2 rounded-lg bg-amber-100" onClick={submit}>
@@ -75,7 +81,13 @@ export default function Home() {
               </button>
             </div>
           </div>
-          <BubblePlot data={points} setData={setPoints} width={500} height={400} />
+          <BubblePlot
+            data={points}
+            setData={setPoints}
+            targets={{ lowerBound: data.lower_bound, upperBound: data.upper_bound }}
+            width={500}
+            height={400}
+          />
         </div>
       </div>
     </div>

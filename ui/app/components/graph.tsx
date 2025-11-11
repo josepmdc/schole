@@ -12,29 +12,62 @@ export interface Point {
   size: number;
 }
 
+interface Targets {
+  lowerBound: number | null;
+  upperBound: number | null;
+}
+
 interface BubblePlotProps {
   width: number;
   height: number;
   data: Point[];
   setData: Dispatch<SetStateAction<Point[]>>;
+  targets: Targets;
 }
 
-export const BubblePlot = ({ width, height, data, setData }: BubblePlotProps) => {
+interface Domain {
+  x: [number, number];
+  y: [number, number];
+}
+
+export const BubblePlot = ({ width, height, data, setData, targets }: BubblePlotProps) => {
   const axesRef = useRef<SVGGElement>(null);
   const bubblesRef = useRef<SVGGElement>(null);
+  const rangeLinesRef = useRef<SVGGElement>(null);
 
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
+  const [initialDomain, setInitialDomain] = useState<Domain | null>(null);
+
+  useEffect(() => {
+    if (data.length && !initialDomain) {
+      let xVals = data.map((d) => d.x);
+      let yVals = data.map((d) => d.y);
+
+      // push target bounds to make sure the solution is in the graph
+      if (targets.lowerBound) {
+        yVals.push(targets.lowerBound);
+      }
+      if (targets.upperBound) {
+        yVals.push(targets.upperBound);
+      }
+
+      const xExtent = d3.extent(xVals) as [number, number];
+      const yExtent = d3.extent(yVals) as [number, number];
+      setInitialDomain({ x: xExtent, y: yExtent });
+    }
+  }, [data, initialDomain]);
+
   const xScale = useMemo(() => {
-    const [min, max] = d3.extent(data.map((d) => d.x)) as [number, number];
-    return d3.scaleLinear().domain([min, max]).range([0, boundsWidth]).nice();
-  }, [data, boundsWidth]);
+    const domain = initialDomain?.x ?? (d3.extent(data.map((d) => d.x)) as [number, number]);
+    return d3.scaleLinear().domain(domain).range([0, boundsWidth]).nice();
+  }, [initialDomain, boundsWidth]);
 
   const yScale = useMemo(() => {
-    const [min, max] = d3.extent(data.map((d) => d.y)) as [number, number];
-    return d3.scaleLinear().domain([min, max]).range([boundsHeight, 0]).nice();
-  }, [data, boundsHeight]);
+    const domain = initialDomain?.y ?? (d3.extent(data.map((d) => d.y)) as [number, number]);
+    return d3.scaleLinear().domain(domain).range([boundsHeight, 0]).nice();
+  }, [initialDomain, boundsHeight]);
 
   const sizeScale = useMemo(() => {
     const [min, max] = d3.extent(data.map((d) => d.size)) as [number, number];
@@ -43,6 +76,8 @@ export const BubblePlot = ({ width, height, data, setData }: BubblePlotProps) =>
 
   // render graph
   useEffect(() => {
+    if (!axesRef.current) return;
+
     const svgElement = d3.select(axesRef.current);
 
     svgElement.selectAll("*").remove();
@@ -78,6 +113,36 @@ export const BubblePlot = ({ width, height, data, setData }: BubblePlotProps) =>
       .text("Output Value (Y)");
   }, [xScale, yScale, boundsHeight, boundsWidth]);
 
+  useEffect(() => {
+    if (!rangeLinesRef.current || data.length == 0) return;
+
+    const yValues = data.map((p) => p.y);
+    console.log(yValues);
+    const [min, max] = [Math.min(...yValues), Math.max(...yValues)];
+    console.log(min, max);
+
+    const svgElement = d3.select(rangeLinesRef.current);
+    svgElement.selectAll("*").remove();
+
+    svgElement
+      .append("line")
+      .attr("stroke", "#3da1e3")
+      .attr("stroke-width", 2)
+      .attr("x1", 0)
+      .attr("y1", yScale(max))
+      .attr("x2", boundsWidth)
+      .attr("y2", yScale(max));
+
+    svgElement
+      .append("line")
+      .attr("stroke", "#e3743d")
+      .attr("stroke-width", 2)
+      .attr("x1", 0)
+      .attr("y1", yScale(min))
+      .attr("x2", boundsWidth)
+      .attr("y2", yScale(min));
+  }, [data, rangeLinesRef, yScale, width]);
+
   // Drag behavior
   useEffect(() => {
     if (!bubblesRef.current) return;
@@ -112,6 +177,8 @@ export const BubblePlot = ({ width, height, data, setData }: BubblePlotProps) =>
   return (
     <>
       <svg width="100%" viewBox={`0 0 ${width} ${height}`}>
+        <g ref={axesRef} transform={`translate(${MARGIN.left},${MARGIN.top})`} />
+        <g ref={rangeLinesRef} transform={`translate(${MARGIN.left},${MARGIN.top})`} />
         <g ref={bubblesRef} transform={`translate(${MARGIN.left},${MARGIN.top})`}>
           {data
             .sort((a, b) => b.size - a.size)
@@ -128,8 +195,6 @@ export const BubblePlot = ({ width, height, data, setData }: BubblePlotProps) =>
               />
             ))}
         </g>
-
-        <g ref={axesRef} transform={`translate(${MARGIN.left},${MARGIN.top})`} />
       </svg>
     </>
   );
