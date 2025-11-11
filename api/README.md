@@ -1,3 +1,11 @@
+# Setup
+```bash
+python -m venv venv
+source venv/bin/activate[.fish|.csh]
+pip install -r requirements.txt
+make migrate
+```
+
 # Structure
 Most of the relevant code is in the "exercises" folder. It follows a simplified version of [DDD](https://en.wikipedia.org/wiki/Domain-driven_design), inspired by the [Django API Domains](https://phalt.github.io/django-api-domains/) style guide.
 
@@ -10,4 +18,5 @@ It contains 3 layers, each layer being a different folder:
 There's a Makefile that allows you to make and run the migrations, generate the Open API spec, run tests, etc.
 
 # Open API spec
-https://github.com/josepmdc/schole/blob/master/api/spec.yml
+- https://josepmdc.pythonanywhere.com/api/schema/swagger-ui/
+- https://github.com/josepmdc/schole/blob/master/api/spec.yml
