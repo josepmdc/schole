@@ -30,10 +30,6 @@ class ExerciseDataPointCreateSerializer(serializers.Serializer):
     y = serializers.FloatField()
     size = serializers.FloatField(min_value=0)
 
-    def to_dto(self) -> CreateExerciseDataPointDto:
-        data = cast(dict[str, float], self.validated_data)  # to prevent typing errors
-        return CreateExerciseDataPointDto(**data)
-
 
 class ExerciseCreateSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
