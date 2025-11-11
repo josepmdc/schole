@@ -8,3 +8,6 @@ It contains 3 layers, each layer being a different folder:
 
 # Makefile
 There's a Makefile that allows you to make and run the migrations, generate the Open API spec, run tests, etc.
+
+# Open API spec
+https://github.com/josepmdc/schole/blob/master/api/spec.yml
