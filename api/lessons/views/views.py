@@ -33,6 +33,45 @@ class RangeExerciseViewSet(viewsets.ViewSet):
             )
 
     @extend_schema(
+        responses=RangeExerciseResponseSerializer,
+        description="Get the first exercise"
+    )
+    @action(methods=["GET"], url_path="first", detail=False)
+    def retrieve_first(self, _) -> Response:
+        try:
+            exercise = ExerciseService.get_first()
+            return Response(
+                RangeExerciseResponseSerializer.from_dto(exercise),
+                status=status.HTTP_200_OK,
+            )
+        except ObjectDoesNotExist:
+            return Response(
+                {'error': f'could not find any exercise'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @extend_schema(
+        responses={200: RangeExerciseResponseSerializer, 204: None},
+        description="Get the next exercise after the current one",
+    )
+    @action(methods=["GET"], url_path="next", detail=True)
+    def retrieve_next(self, _, pk: UUID) -> Response:
+        exercise = ExerciseService.get_next(pk)
+
+        if exercise is None:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(
+            RangeExerciseResponseSerializer.from_dto(exercise),
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(
         request=RangeExerciseCreateSerializer,
         responses=RangeExerciseResponseSerializer,
         description="Create a new range exercise"

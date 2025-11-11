@@ -6,7 +6,6 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
 from django.db.models import Max
 from lessons.models import RangeExercise
-from lessons.models.lesson import Lesson
 from lessons.models.range_exercise import RangeExerciseDataPoint, ConstraintType, assert_never
 
 @dataclass
@@ -68,10 +67,10 @@ class RangeExerciseResponseDto:
 
 class ExerciseService:
     @staticmethod
-    def _get_next_lesson_order() -> int:
-        """Get the next order value for lessons, preventing a race condition"""
+    def _get_next_exercise_order() -> int:
+        """Get the next order value for exercises, preventing a race condition"""
         max_order = (
-            Lesson.objects
+            RangeExercise.objects
             .select_for_update() # lock DB to prevent a race condition
             .aggregate(max_order=Max('order'))['max_order']
         )
@@ -86,6 +85,34 @@ class ExerciseService:
             raise ObjectDoesNotExist(f"RangeExercise with id {exercise_id} not found")
 
     @staticmethod
+    def get_first() -> RangeExerciseResponseDto:
+        exercise = RangeExercise.objects.prefetch_related('data_points').first()
+
+        if exercise is None:
+            raise ObjectDoesNotExist(f"could not find any exercise")
+
+        return RangeExerciseResponseDto.from_model(exercise)
+
+    @staticmethod
+    def get_next(exercise_id: UUID) -> RangeExerciseResponseDto | None:
+        current = RangeExercise.objects.get(id=exercise_id)
+
+        if current is None:
+            raise ObjectDoesNotExist(f"RangeExercise with id {exercise_id} not found")
+
+        next = (
+            RangeExercise.objects
+            .prefetch_related('data_points')
+            .filter(order__gt=current.order)
+            .order_by('order')
+            .first()
+        )
+
+        if next is None:
+            return None
+        return RangeExerciseResponseDto.from_model(next)
+
+    @staticmethod
     def create_range_exercise(data: RangeExerciseCreateDto) -> RangeExerciseResponseDto:
         if not data.points:
             raise ValidationError(
@@ -94,8 +121,8 @@ class ExerciseService:
             )
         
         with transaction.atomic():
-            # TODO: allow lesson reordering, maybe on a separate endpoint
-            order = ExerciseService._get_next_lesson_order()
+            # TODO: allow exercise reordering, maybe on a separate endpoint
+            order = ExerciseService._get_next_exercise_order()
 
             exercise = RangeExercise(
                 id=uuid4(),

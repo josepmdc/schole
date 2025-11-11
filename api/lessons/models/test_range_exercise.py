@@ -6,10 +6,10 @@ from uuid import uuid4
 from lessons.models.range_exercise import RangeExercise, RangeExerciseDataPoint, ConstraintType
 
 class RangeExerciseValidationsTest(TestCase):
-    def _create_test_exercise(self, constraint_type, lower_bound, upper_bound) -> RangeExercise:
+    def _create_test_exercise(self, constraint_type, lower_bound, upper_bound, id=uuid4()) -> RangeExercise:
         """creates a range exercise with sane defaults for testing"""
         return RangeExercise(
-            id=uuid4(),
+            id=id,
             title="title",
             constraint_type=constraint_type,
             lower_bound=lower_bound,
@@ -17,6 +17,25 @@ class RangeExerciseValidationsTest(TestCase):
             description="Test exercise",
             order=1
         )
+
+    def test_given_a_exercise_with_the_same_id_integrity_error_is_returned(self):
+        """given we try to create a exercise with an ID that already exists, an error is returned"""
+        exercise_id = uuid4()
+
+        self._create_test_exercise(
+            id=exercise_id,
+            constraint_type=ConstraintType.LT,
+            lower_bound=None,
+            upper_bound=2.2,
+        ).save()
+
+        with self.assertRaises(ValidationError):
+            self._create_test_exercise(
+                id=exercise_id,
+                constraint_type=ConstraintType.LT,
+                lower_bound=None,
+                upper_bound=2.2,
+            ).save()
 
     def test_constraint_type_not_set(self):
         """given constraint_type is not set, a ValidationError is raised"""
