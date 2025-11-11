@@ -10,33 +10,74 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='RangeExercise',
+            name="RangeExercise",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('order', models.PositiveIntegerField(unique=True)),
-                ('title', models.CharField(max_length=200)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('description', models.TextField()),
-                ('constraint_type', models.CharField(choices=[(lessons.models.range_exercise.ConstraintType['LT'], 'less than'), (lessons.models.range_exercise.ConstraintType['GT'], 'greater than'), (lessons.models.range_exercise.ConstraintType['BETWEEN'], 'between')], max_length=10)),
-                ('upper_bound', models.FloatField(blank=True, null=True)),
-                ('lower_bound', models.FloatField(blank=True, null=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("order", models.PositiveIntegerField(unique=True)),
+                ("title", models.CharField(max_length=200)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("description", models.TextField()),
+                (
+                    "constraint_type",
+                    models.CharField(
+                        choices=[
+                            (
+                                lessons.models.range_exercise.ConstraintType["LT"],
+                                "less than",
+                            ),
+                            (
+                                lessons.models.range_exercise.ConstraintType["GT"],
+                                "greater than",
+                            ),
+                            (
+                                lessons.models.range_exercise.ConstraintType["BETWEEN"],
+                                "between",
+                            ),
+                        ],
+                        max_length=10,
+                    ),
+                ),
+                ("upper_bound", models.FloatField(blank=True, null=True)),
+                ("lower_bound", models.FloatField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
-            name='RangeExerciseDataPoint',
+            name="RangeExerciseDataPoint",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('x', models.FloatField(help_text='x coordinate')),
-                ('y', models.FloatField(help_text='y coordinate')),
-                ('size', models.FloatField(help_text='Size of the bubble')),
-                ('exercise', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='data_points', to='lessons.rangeexercise')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("x", models.FloatField(help_text="x coordinate")),
+                ("y", models.FloatField(help_text="y coordinate")),
+                ("size", models.FloatField(help_text="Size of the bubble")),
+                (
+                    "exercise",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="data_points",
+                        to="lessons.rangeexercise",
+                    ),
+                ),
             ],
         ),
     ]

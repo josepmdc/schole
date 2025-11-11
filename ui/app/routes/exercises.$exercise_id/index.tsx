@@ -23,7 +23,7 @@ export default function Exercise() {
 
   const [points, setPoints] = useState<Point[]>([]);
 
-  const [isSolved, setIsSolved] = useState(false);
+  const [isSolved, setIsSolved] = useState<boolean | null>(null);
 
   const evaluate = useMutation({
     ...exercisesEvaluateCreateMutation(),
@@ -44,7 +44,7 @@ export default function Exercise() {
     }));
 
     setPoints(dataPoints);
-    setIsSolved(false);
+    setIsSolved(null);
   }, [exercise]);
 
   if (isExerciseLoading || isNextLoading) return <Loading />;
@@ -81,7 +81,7 @@ export default function Exercise() {
               </p>
             </div>
             <div className="flex justify-center">
-              {isSolved && (
+              {isSolved === true && (
                 <div className="flex flex-col space-y-6 w-full items-center">
                   <div className="flex flex-col justify-center items-center w-full">
                     <svg
@@ -112,9 +112,20 @@ export default function Exercise() {
                 </div>
               )}
               {!isSolved && (
-                <Button className="bg-amber-100 w-full" onClick={submit}>
-                  Sumbit
-                </Button>
+                <>
+                  <div className="flex flex-col space-y-6 w-full items-center">
+                    {isSolved === false && (
+                      <div className="flex flex-col justify-center items-center w-full">
+                        <p className="text-lg font-bold text-red-400">
+                          Oops, not quite there yet. Give it another try
+                        </p>
+                      </div>
+                    )}
+                    <Button className="bg-amber-100 w-full" onClick={submit}>
+                      Sumbit
+                    </Button>
+                  </div>
+                </>
               )}
             </div>
           </div>

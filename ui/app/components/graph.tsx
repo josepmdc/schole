@@ -45,12 +45,12 @@ export const BubblePlot = ({ width, height, data, setData, targets }: BubblePlot
       let xVals = data.map((d) => d.x);
       let yVals = data.map((d) => d.y);
 
-      // push target bounds to make sure the solution is in the graph
+      // push target bounds to make sure the solution is in the graph. Add 10 to offer wiggle room
       if (targets.lowerBound) {
-        yVals.push(targets.lowerBound);
+        yVals.push(targets.lowerBound + 10);
       }
       if (targets.upperBound) {
-        yVals.push(targets.upperBound);
+        yVals.push(targets.upperBound - 10);
       }
 
       const xExtent = d3.extent(xVals) as [number, number];

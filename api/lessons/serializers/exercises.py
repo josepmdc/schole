@@ -1,8 +1,13 @@
-from typing import cast
-from uuid import UUID
+from typing import List, cast
 from rest_framework import serializers
 from lessons.models.range_exercise import ConstraintType
-from lessons.services.service import RangeExerciseCreateDto, RangeExerciseDataPointCreateDto, RangeExerciseDataPointDto, RangeExerciseResponseDto
+from lessons.services.service import (
+    RangeExerciseCreateDto,
+    RangeExerciseDataPointCreateDto,
+    RangeExerciseDataPointDto,
+    RangeExerciseResponseDto,
+)
+
 
 class RangeExerciseDataPointSerializer(serializers.Serializer):
     id = serializers.UUIDField()
@@ -13,11 +18,12 @@ class RangeExerciseDataPointSerializer(serializers.Serializer):
     @classmethod
     def from_dto(cls, dto: RangeExerciseDataPointDto) -> dict:
         return {
-            'id': dto.id,
-            'x': dto.x,
-            'y': dto.y,
-            'size': dto.size,
+            "id": dto.id,
+            "x": dto.x,
+            "y": dto.y,
+            "size": dto.size,
         }
+
 
 class RangeExerciseDataPointCreateSerializer(serializers.Serializer):
     x = serializers.FloatField()
@@ -25,31 +31,40 @@ class RangeExerciseDataPointCreateSerializer(serializers.Serializer):
     size = serializers.FloatField(min_value=0)
 
     def to_dto(self) -> RangeExerciseDataPointCreateDto:
-        data = cast(dict[str, float], self.validated_data) # to prevent typing errors
+        data = cast(dict[str, float], self.validated_data)  # to prevent typing errors
         return RangeExerciseDataPointCreateDto(**data)
+
 
 class RangeExerciseCreateSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     description = serializers.CharField()
-    constraint_type = serializers.ChoiceField(choices=[ct.value for ct in ConstraintType])
+    constraint_type = serializers.ChoiceField(
+        choices=[ct.value for ct in ConstraintType]
+    )
     lower_bound = serializers.FloatField(required=False, allow_null=True)
     upper_bound = serializers.FloatField(required=False, allow_null=True)
     is_active = serializers.BooleanField(default=True)
     points = RangeExerciseDataPointCreateSerializer(many=True)
 
-    def to_dto(self) -> RangeExerciseCreateDto:
+class RangeExerciseCreateManySerializer(serializers.Serializer):
+    exercises = RangeExerciseCreateSerializer(many=True)
+
+    def to_dto(self) -> List[RangeExerciseCreateDto]:
         assert isinstance(self.validated_data, dict)
 
         data = self.validated_data.copy()
-        data["constraint_type"] = ConstraintType(data["constraint_type"])
-        points = data.pop('points')
 
-        return RangeExerciseCreateDto(
-            **data,
-            points=[
-                RangeExerciseDataPointCreateDto(**point) for point in points
-            ]
-        )
+        exercises = []
+        for exercise in data["exercises"]:
+            exercise["constraint_type"] = ConstraintType(exercise["constraint_type"])
+            points = exercise.pop("points")
+            exercises.append(RangeExerciseCreateDto(
+                **exercise,
+                points=[RangeExerciseDataPointCreateDto(**point) for point in points]
+            ))
+
+        return exercises
+
 
 class RangeExerciseResponseSerializer(serializers.Serializer):
     id = serializers.UUIDField()
@@ -69,28 +84,33 @@ class RangeExerciseResponseSerializer(serializers.Serializer):
     def from_dto(cls, dto: RangeExerciseResponseDto) -> dict:
         """Convert DTO to serialized data"""
         return {
-            'id': dto.id,
-            'order': dto.order,
-            'title': dto.title,
-            'description': dto.description,
-            'constraint_type': dto.constraint_type,
-            'lower_bound': dto.lower_bound,
-            'upper_bound': dto.upper_bound,
-            'is_active': dto.is_active,
-            'created_at': dto.created_at,
-            'updated_at': dto.updated_at,
-            'data_points': [
-                RangeExerciseDataPointSerializer.from_dto(dp)
-                for dp in dto.data_points
+            "id": dto.id,
+            "order": dto.order,
+            "title": dto.title,
+            "description": dto.description,
+            "constraint_type": dto.constraint_type,
+            "lower_bound": dto.lower_bound,
+            "upper_bound": dto.upper_bound,
+            "is_active": dto.is_active,
+            "created_at": dto.created_at,
+            "updated_at": dto.updated_at,
+            "data_points": [
+                RangeExerciseDataPointSerializer.from_dto(dp) for dp in dto.data_points
             ],
         }
+
+
+class RangeExerciseManyResponseSerializer(serializers.Serializer):
+    exercises = RangeExerciseResponseSerializer(many=True)
 
 
 class EvaluateSolutionSerializer(serializers.Serializer):
     solution = RangeExerciseDataPointSerializer(many=True)
 
+
 class EvaluateSolutionResponseSerializer(serializers.Serializer):
     is_correct = serializers.BooleanField()
+
 
 class NextExerciseSerializer(serializers.Serializer):
     id = serializers.UUIDField(allow_null=True)

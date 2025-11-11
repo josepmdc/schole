@@ -3,10 +3,17 @@ from django.test import TestCase
 from django.db import transaction
 from uuid import uuid4
 
-from lessons.models.range_exercise import RangeExercise, RangeExerciseDataPoint, ConstraintType
+from lessons.models.range_exercise import (
+    RangeExercise,
+    RangeExerciseDataPoint,
+    ConstraintType,
+)
+
 
 class RangeExerciseValidationsTest(TestCase):
-    def _create_test_exercise(self, constraint_type, lower_bound, upper_bound, id=uuid4()) -> RangeExercise:
+    def _create_test_exercise(
+        self, constraint_type, lower_bound, upper_bound, id=uuid4()
+    ) -> RangeExercise:
         """creates a range exercise with sane defaults for testing"""
         return RangeExercise(
             id=id,
@@ -15,7 +22,7 @@ class RangeExerciseValidationsTest(TestCase):
             lower_bound=lower_bound,
             upper_bound=upper_bound,
             description="Test exercise",
-            order=1
+            order=1,
         )
 
     def test_given_a_exercise_with_the_same_id_integrity_error_is_returned(self):
@@ -137,7 +144,7 @@ class RangeExerciseValidationsTest(TestCase):
         """given an exercise we can add data point to it"""
         exercise = self._create_test_exercise(ConstraintType.BETWEEN, 2.2, 4.3)
         data_points = [
-            RangeExerciseDataPoint(x=1+i, y=2+i, size=3+i, exercise=exercise)
+            RangeExerciseDataPoint(x=1 + i, y=2 + i, size=3 + i, exercise=exercise)
             for i in range(0, 5)
         ]
 

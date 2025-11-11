@@ -7,7 +7,7 @@ import { exercisesCreate, exercisesEvaluateCreate, exercisesFirstRetrieve, exerc
 import type { ExercisesCreateData, ExercisesCreateResponse, ExercisesEvaluateCreateData, ExercisesEvaluateCreateResponse, ExercisesFirstRetrieveData, ExercisesNextRetrieveData, ExercisesRetrieveData, SchemaRetrieveData } from '../types.gen';
 
 /**
- * Create a new range exercise
+ * Create new exercises
  */
 export const exercisesCreateMutation = (options?: Partial<Options<ExercisesCreateData>>): UseMutationOptions<ExercisesCreateResponse, DefaultError, Options<ExercisesCreateData>> => {
     const mutationOptions: UseMutationOptions<ExercisesCreateResponse, DefaultError, Options<ExercisesCreateData>> = {

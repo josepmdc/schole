@@ -6,20 +6,20 @@ paths:
   /api/exercises/:
     post:
       operationId: exercises_create
-      description: Create a new range exercise
+      description: Create new exercises
       tags:
       - exercises
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RangeExerciseCreate'
+              $ref: '#/components/schemas/RangeExerciseCreateMany'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/RangeExerciseCreate'
+              $ref: '#/components/schemas/RangeExerciseCreateMany'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/RangeExerciseCreate'
+              $ref: '#/components/schemas/RangeExerciseCreateMany'
         required: true
       security:
       - cookieAuth: []
@@ -30,7 +30,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RangeExerciseResponse'
+                $ref: '#/components/schemas/RangeExerciseManyResponse'
           description: ''
   /api/exercises/{id}/:
     get:
@@ -343,6 +343,15 @@ components:
       - description
       - points
       - title
+    RangeExerciseCreateMany:
+      type: object
+      properties:
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/RangeExerciseCreate'
+      required:
+      - exercises
     RangeExerciseDataPoint:
       type: object
       properties:
@@ -380,6 +389,15 @@ components:
       - size
       - x
       - y
+    RangeExerciseManyResponse:
+      type: object
+      properties:
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/RangeExerciseResponse'
+      required:
+      - exercises
     RangeExerciseResponse:
       type: object
       properties:

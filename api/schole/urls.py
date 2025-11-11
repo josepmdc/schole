@@ -6,11 +6,15 @@ from rest_framework.routers import DefaultRouter
 from lessons.views.views import RangeExerciseViewSet
 
 router = DefaultRouter()
-router.register(r'exercises', RangeExerciseViewSet, basename='exercise')
+router.register(r"exercises", RangeExerciseViewSet, basename="exercise")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include(router.urls)),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path("admin/", admin.site.urls),
+    path("api/", include(router.urls)),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/schema/swagger-ui/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
 ]

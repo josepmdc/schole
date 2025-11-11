@@ -33,6 +33,10 @@ export type RangeExerciseCreate = {
     points: Array<RangeExerciseDataPointCreate>;
 };
 
+export type RangeExerciseCreateMany = {
+    exercises: Array<RangeExerciseCreate>;
+};
+
 export type RangeExerciseDataPoint = {
     id: string;
     x: number;
@@ -44,6 +48,10 @@ export type RangeExerciseDataPointCreate = {
     x: number;
     y: number;
     size: number;
+};
+
+export type RangeExerciseManyResponse = {
+    exercises: Array<RangeExerciseResponse>;
 };
 
 export type RangeExerciseResponse = {
@@ -62,14 +70,14 @@ export type RangeExerciseResponse = {
 };
 
 export type ExercisesCreateData = {
-    body: RangeExerciseCreate;
+    body: RangeExerciseCreateMany;
     path?: never;
     query?: never;
     url: '/api/exercises/';
 };
 
 export type ExercisesCreateResponses = {
-    201: RangeExerciseResponse;
+    201: RangeExerciseManyResponse;
 };
 
 export type ExercisesCreateResponse = ExercisesCreateResponses[keyof ExercisesCreateResponses];

@@ -19,7 +19,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 /**
- * Create a new range exercise
+ * Create new exercises
  */
 export const exercisesCreate = <ThrowOnError extends boolean = false>(options: Options<ExercisesCreateData, ThrowOnError>) => {
     return (options.client ?? client).post<ExercisesCreateResponses, unknown, ThrowOnError>({
