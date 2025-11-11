@@ -1,4 +1,4 @@
-import { BubblePlot, type Point } from "~/components/graph";
+import { BubblePlot, type Domain, type Point } from "~/components/graph";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Loading } from "~/components/loading";
@@ -10,6 +10,7 @@ import {
 import { Link, useParams } from "react-router";
 import Button from "~/components/button";
 import LoadingButton from "~/components/loading-button";
+import * as d3 from "d3";
 
 export default function Exercise() {
   const params = useParams() as { exerciseId: string };
@@ -46,13 +47,11 @@ export default function Exercise() {
 
     setPoints(dataPoints);
     setIsSolved(null);
-  }, [exercise]);
-
-  if (isExerciseLoading || isNextLoading) return <Loading />;
-  if (!exercise || !nextExercise)
-    return <h1>Oops something went wrong. We couldn't find the exercise data</h1>;
+  }, [exercise?.id]);
 
   const submit = () => {
+    if (!exercise) return;
+
     evaluate.mutate({
       path: { id: exercise.id },
       body: {
@@ -65,6 +64,32 @@ export default function Exercise() {
       },
     });
   };
+
+  const [domain, setDomain] = useState<Domain>({ x: [0, 0], y: [0, 0] });
+
+  // recompute the domain if we change exercise
+  useEffect(() => {
+    if (!exercise) return;
+
+    const xVals = exercise.data_points.map((d) => d.x);
+    const yVals = exercise.data_points.map((d) => d.y);
+
+    if (exercise.lower_bound) yVals.push(exercise.lower_bound + 10);
+    if (exercise.upper_bound) yVals.push(exercise.upper_bound - 10);
+
+    const xExtent = d3.extent(xVals) as [number, number];
+    const yExtent = d3.extent(yVals) as [number, number];
+
+    setDomain({ x: xExtent, y: yExtent });
+  }, [exercise?.id]);
+
+  if (isExerciseLoading || isNextLoading) {
+    return <Loading />;
+  }
+
+  if (!exercise || !nextExercise) {
+    return <h1>Oops something went wrong. We couldn't find the exercise data</h1>;
+  }
 
   return (
     <div className="flex h-screen">
@@ -137,11 +162,12 @@ export default function Exercise() {
           </div>
           <div className="w-full">
             <BubblePlot
+              key={exercise.id}
               data={points}
               setData={setPoints}
-              targets={{ lowerBound: exercise.lower_bound, upperBound: exercise.upper_bound }}
               width={600}
               height={500}
+              domain={domain}
             />
           </div>
         </div>

@@ -12,49 +12,45 @@ export type ClientOptions = {
 export type ConstraintTypeEnum = 'lt' | 'gt' | 'between';
 
 export type EvaluateSolution = {
-    solution: Array<RangeExerciseDataPoint>;
+    solution: Array<ExerciseDataPoint>;
 };
 
 export type EvaluateSolutionResponse = {
     is_correct: boolean;
 };
 
-export type NextExercise = {
-    id: string | null;
-};
-
-export type RangeExerciseCreate = {
+export type ExerciseCreate = {
     title: string;
     description: string;
     constraint_type: ConstraintTypeEnum;
     lower_bound?: number | null;
     upper_bound?: number | null;
     is_active?: boolean;
-    points: Array<RangeExerciseDataPointCreate>;
+    points: Array<ExerciseDataPointCreate>;
 };
 
-export type RangeExerciseCreateMany = {
-    exercises: Array<RangeExerciseCreate>;
+export type ExerciseCreateMany = {
+    exercises: Array<ExerciseCreate>;
 };
 
-export type RangeExerciseDataPoint = {
+export type ExerciseDataPoint = {
     id: string;
     x: number;
     y: number;
     size: number;
 };
 
-export type RangeExerciseDataPointCreate = {
+export type ExerciseDataPointCreate = {
     x: number;
     y: number;
     size: number;
 };
 
-export type RangeExerciseManyResponse = {
-    exercises: Array<RangeExerciseResponse>;
+export type ExerciseManyResponse = {
+    exercises: Array<ExerciseResponse>;
 };
 
-export type RangeExerciseResponse = {
+export type ExerciseResponse = {
     id: string;
     order: number;
     title: string;
@@ -66,18 +62,22 @@ export type RangeExerciseResponse = {
     is_active: boolean;
     created_at: string;
     updated_at: string;
-    data_points: Array<RangeExerciseDataPoint>;
+    data_points: Array<ExerciseDataPoint>;
+};
+
+export type NextExercise = {
+    id: string | null;
 };
 
 export type ExercisesCreateData = {
-    body: RangeExerciseCreateMany;
+    body: ExerciseCreateMany;
     path?: never;
     query?: never;
     url: '/api/exercises/';
 };
 
 export type ExercisesCreateResponses = {
-    201: RangeExerciseManyResponse;
+    201: ExerciseManyResponse;
 };
 
 export type ExercisesCreateResponse = ExercisesCreateResponses[keyof ExercisesCreateResponses];
@@ -92,7 +92,7 @@ export type ExercisesRetrieveData = {
 };
 
 export type ExercisesRetrieveResponses = {
-    200: RangeExerciseResponse;
+    200: ExerciseResponse;
 };
 
 export type ExercisesRetrieveResponse = ExercisesRetrieveResponses[keyof ExercisesRetrieveResponses];
@@ -135,7 +135,7 @@ export type ExercisesFirstRetrieveData = {
 };
 
 export type ExercisesFirstRetrieveResponses = {
-    200: RangeExerciseResponse;
+    200: ExerciseResponse;
 };
 
 export type ExercisesFirstRetrieveResponse = ExercisesFirstRetrieveResponses[keyof ExercisesFirstRetrieveResponses];

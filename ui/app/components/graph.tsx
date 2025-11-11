@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo, useRef, type Dispatch, type SetStateAction } from "react";
 import * as d3 from "d3";
 
 const MARGIN = { top: 30, right: 75, bottom: 80, left: 100 };
@@ -12,25 +12,20 @@ export interface Point {
   size: number;
 }
 
-interface Targets {
-  lowerBound: number | null;
-  upperBound: number | null;
-}
-
 interface BubblePlotProps {
   width: number;
   height: number;
   data: Point[];
   setData: Dispatch<SetStateAction<Point[]>>;
-  targets: Targets;
+  domain: Domain;
 }
 
-interface Domain {
+export interface Domain {
   x: [number, number];
   y: [number, number];
 }
 
-export const BubblePlot = ({ width, height, data, setData, targets }: BubblePlotProps) => {
+export const BubblePlot = ({ width, height, data, setData, domain }: BubblePlotProps) => {
   const axesRef = useRef<SVGGElement>(null);
   const bubblesRef = useRef<SVGGElement>(null);
   const rangeLinesRef = useRef<SVGGElement>(null);
@@ -38,36 +33,13 @@ export const BubblePlot = ({ width, height, data, setData, targets }: BubblePlot
   const boundsWidth = width - MARGIN.left - MARGIN.right;
   const boundsHeight = height - MARGIN.top - MARGIN.bottom;
 
-  const [initialDomain, setInitialDomain] = useState<Domain | null>(null);
-
-  useEffect(() => {
-    if (data.length && !initialDomain) {
-      let xVals = data.map((d) => d.x);
-      let yVals = data.map((d) => d.y);
-
-      // push target bounds to make sure the solution is in the graph. Add 10 to offer wiggle room
-      if (targets.lowerBound) {
-        yVals.push(targets.lowerBound + 10);
-      }
-      if (targets.upperBound) {
-        yVals.push(targets.upperBound - 10);
-      }
-
-      const xExtent = d3.extent(xVals) as [number, number];
-      const yExtent = d3.extent(yVals) as [number, number];
-      setInitialDomain({ x: xExtent, y: yExtent });
-    }
-  }, [data, initialDomain]);
-
   const xScale = useMemo(() => {
-    const domain = initialDomain?.x ?? (d3.extent(data.map((d) => d.x)) as [number, number]);
-    return d3.scaleLinear().domain(domain).range([0, boundsWidth]).nice();
-  }, [initialDomain, boundsWidth]);
+    return d3.scaleLinear().domain(domain.x).range([0, boundsWidth]).nice();
+  }, [domain.x, boundsWidth]);
 
   const yScale = useMemo(() => {
-    const domain = initialDomain?.y ?? (d3.extent(data.map((d) => d.y)) as [number, number]);
-    return d3.scaleLinear().domain(domain).range([boundsHeight, 0]).nice();
-  }, [initialDomain, boundsHeight]);
+    return d3.scaleLinear().domain(domain.y).range([boundsHeight, 0]).nice();
+  }, [domain.y, boundsHeight]);
 
   const sizeScale = useMemo(() => {
     const [min, max] = d3.extent(data.map((d) => d.size)) as [number, number];

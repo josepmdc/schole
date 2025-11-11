@@ -13,13 +13,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RangeExerciseCreateMany'
+              $ref: '#/components/schemas/ExerciseCreateMany'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/RangeExerciseCreateMany'
+              $ref: '#/components/schemas/ExerciseCreateMany'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/RangeExerciseCreateMany'
+              $ref: '#/components/schemas/ExerciseCreateMany'
         required: true
       security:
       - cookieAuth: []
@@ -30,7 +30,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RangeExerciseManyResponse'
+                $ref: '#/components/schemas/ExerciseManyResponse'
           description: ''
   /api/exercises/{id}/:
     get:
@@ -53,7 +53,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RangeExerciseResponse'
+                $ref: '#/components/schemas/ExerciseResponse'
           description: ''
   /api/exercises/{id}/evaluate/:
     post:
@@ -128,7 +128,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RangeExerciseResponse'
+                $ref: '#/components/schemas/ExerciseResponse'
           description: ''
   /api/schema/:
     get:
@@ -294,7 +294,7 @@ components:
         solution:
           type: array
           items:
-            $ref: '#/components/schemas/RangeExerciseDataPoint'
+            $ref: '#/components/schemas/ExerciseDataPoint'
       required:
       - solution
     EvaluateSolutionResponse:
@@ -304,16 +304,7 @@ components:
           type: boolean
       required:
       - is_correct
-    NextExercise:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          nullable: true
-      required:
-      - id
-    RangeExerciseCreate:
+    ExerciseCreate:
       type: object
       properties:
         title:
@@ -337,22 +328,22 @@ components:
         points:
           type: array
           items:
-            $ref: '#/components/schemas/RangeExerciseDataPointCreate'
+            $ref: '#/components/schemas/ExerciseDataPointCreate'
       required:
       - constraint_type
       - description
       - points
       - title
-    RangeExerciseCreateMany:
+    ExerciseCreateMany:
       type: object
       properties:
         exercises:
           type: array
           items:
-            $ref: '#/components/schemas/RangeExerciseCreate'
+            $ref: '#/components/schemas/ExerciseCreate'
       required:
       - exercises
-    RangeExerciseDataPoint:
+    ExerciseDataPoint:
       type: object
       properties:
         id:
@@ -372,7 +363,7 @@ components:
       - size
       - x
       - y
-    RangeExerciseDataPointCreate:
+    ExerciseDataPointCreate:
       type: object
       properties:
         x:
@@ -389,16 +380,16 @@ components:
       - size
       - x
       - y
-    RangeExerciseManyResponse:
+    ExerciseManyResponse:
       type: object
       properties:
         exercises:
           type: array
           items:
-            $ref: '#/components/schemas/RangeExerciseResponse'
+            $ref: '#/components/schemas/ExerciseResponse'
       required:
       - exercises
-    RangeExerciseResponse:
+    ExerciseResponse:
       type: object
       properties:
         id:
@@ -433,7 +424,7 @@ components:
         data_points:
           type: array
           items:
-            $ref: '#/components/schemas/RangeExerciseDataPoint'
+            $ref: '#/components/schemas/ExerciseDataPoint'
       required:
       - constraint_type
       - constraint_type_display
@@ -447,6 +438,15 @@ components:
       - title
       - updated_at
       - upper_bound
+    NextExercise:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - id
   securitySchemes:
     basicAuth:
       type: http
