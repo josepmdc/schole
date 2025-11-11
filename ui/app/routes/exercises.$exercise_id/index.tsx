@@ -9,6 +9,7 @@ import {
 } from "~/lib/api/@tanstack/react-query.gen";
 import { Link, useParams } from "react-router";
 import Button from "~/components/button";
+import LoadingButton from "~/components/loading-button";
 
 export default function Exercise() {
   const params = useParams() as { exerciseId: string };
@@ -121,9 +122,14 @@ export default function Exercise() {
                         </p>
                       </div>
                     )}
-                    <Button className="bg-amber-100 w-full" onClick={submit}>
-                      Sumbit
-                    </Button>
+                    <LoadingButton
+                      className="bg-amber-100 w-full"
+                      isLoading={evaluate.isPending}
+                      loadingText="Evaluating"
+                      onClick={submit}
+                    >
+                      Submit
+                    </LoadingButton>
                   </div>
                 </>
               )}
