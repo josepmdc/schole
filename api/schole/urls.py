@@ -3,10 +3,10 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.routers import DefaultRouter
 
-from lessons.views.views import RangeExerciseViewSet
+from exercises.views.views import ExerciseViewSet
 
 router = DefaultRouter()
-router.register(r"exercises", RangeExerciseViewSet, basename="exercise")
+router.register(r"exercises", ExerciseViewSet, basename="exercise")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

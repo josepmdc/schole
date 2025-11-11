@@ -5,23 +5,23 @@ from uuid import UUID, uuid4
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
 from django.db.models import Max
-from lessons.models import RangeExercise
-from lessons.models.range_exercise import (
-    RangeExerciseDataPoint,
+from exercises.models import Exercise
+from exercises.models.range_exercise import (
+    ExerciseDataPoint,
     ConstraintType,
     assert_never,
 )
 
 
 @dataclass
-class RangeExerciseDataPointCreateDto:
+class CreateExerciseDataPointDto:
     x: float
     y: float
     size: float
 
 
 @dataclass
-class RangeExerciseDataPointDto:
+class ExerciseDataPointDto:
     id: UUID
     x: float
     y: float
@@ -29,7 +29,7 @@ class RangeExerciseDataPointDto:
 
 
 @dataclass
-class RangeExerciseCreateDto:
+class CreateExerciseDto:
     title: str
     description: str
     constraint_type: ConstraintType
@@ -37,11 +37,11 @@ class RangeExerciseCreateDto:
     upper_bound: Optional[float] = None
     is_active: bool = True
 
-    points: List[RangeExerciseDataPointCreateDto] = field(default_factory=list)
+    points: List[CreateExerciseDataPointDto] = field(default_factory=list)
 
 
 @dataclass
-class RangeExerciseResponseDto:
+class ExerciseResponseDto:
     id: UUID
     order: int
     title: str
@@ -52,10 +52,10 @@ class RangeExerciseResponseDto:
     is_active: bool
     created_at: datetime.datetime
     updated_at: datetime.datetime
-    data_points: List[RangeExerciseDataPointDto]
+    data_points: List[ExerciseDataPointDto]
 
     @classmethod
-    def from_model(cls, exercise: RangeExercise) -> "RangeExerciseResponseDto":
+    def from_model(cls, exercise: Exercise) -> "ExerciseResponseDto":
         return cls(
             id=exercise.id,
             order=exercise.order,
@@ -68,7 +68,7 @@ class RangeExerciseResponseDto:
             created_at=exercise.created_at,
             updated_at=exercise.updated_at,
             data_points=[
-                RangeExerciseDataPointDto(
+                ExerciseDataPointDto(
                     id=point.id, x=point.x, y=point.y, size=point.size
                 )
                 for point in exercise.data_points.all()
@@ -80,7 +80,7 @@ class ExerciseService:
     @staticmethod
     def _get_next_exercise_order() -> int:
         """Get the next order value for exercises, preventing a race condition"""
-        max_order = RangeExercise.objects.select_for_update().aggregate(  # lock DB to prevent a race condition
+        max_order = Exercise.objects.select_for_update().aggregate(  # lock DB to prevent a race condition
             max_order=Max("order")
         )[
             "max_order"
@@ -88,19 +88,19 @@ class ExerciseService:
         return (max_order or 0) + 1
 
     @staticmethod
-    def get(exercise_id: UUID) -> RangeExerciseResponseDto:
+    def get(exercise_id: UUID) -> ExerciseResponseDto:
         try:
-            exercise = RangeExercise.objects.prefetch_related("data_points").get(
+            exercise = Exercise.objects.prefetch_related("data_points").get(
                 id=exercise_id
             )
-            return RangeExerciseResponseDto.from_model(exercise)
-        except RangeExercise.DoesNotExist:
-            raise ObjectDoesNotExist(f"RangeExercise with id {exercise_id} not found")
+            return ExerciseResponseDto.from_model(exercise)
+        except Exercise.DoesNotExist:
+            raise ObjectDoesNotExist(f"Exercise with id {exercise_id} not found")
 
     @staticmethod
-    def get_first() -> RangeExerciseResponseDto:
+    def get_first() -> ExerciseResponseDto:
         exercise = (
-            RangeExercise.objects.prefetch_related("data_points")
+            Exercise.objects.prefetch_related("data_points")
             .order_by("order")
             .first()
         )
@@ -108,17 +108,17 @@ class ExerciseService:
         if exercise is None:
             raise ObjectDoesNotExist(f"could not find any exercise")
 
-        return RangeExerciseResponseDto.from_model(exercise)
+        return ExerciseResponseDto.from_model(exercise)
 
     @staticmethod
     def get_next(exercise_id: UUID) -> UUID | None:
-        current = RangeExercise.objects.get(id=exercise_id)
+        current = Exercise.objects.get(id=exercise_id)
 
         if current is None:
-            raise ObjectDoesNotExist(f"RangeExercise with id {exercise_id} not found")
+            raise ObjectDoesNotExist(f"Exercise with id {exercise_id} not found")
 
         next = (
-            RangeExercise.objects.prefetch_related("data_points")
+            Exercise.objects.prefetch_related("data_points")
             .filter(order__gt=current.order)
             .order_by("order")
             .values_list("id", flat=True)
@@ -130,17 +130,17 @@ class ExerciseService:
         return next
 
     @staticmethod
-    def create_range_exercise(
-        exercises_req: List[RangeExerciseCreateDto],
-    ) -> List[RangeExerciseResponseDto]:
-        exercises: List[RangeExerciseResponseDto] = []
+    def create_exercises(
+        exercises_req: List[CreateExerciseDto],
+    ) -> List[ExerciseResponseDto]:
+        exercises: List[ExerciseResponseDto] = []
 
         with transaction.atomic():
             for exercise_req in exercises_req:
                 # TODO: allow exercise reordering, maybe on a separate endpoint
                 order = ExerciseService._get_next_exercise_order()
 
-                exercise = RangeExercise(
+                exercise = Exercise(
                     id=uuid4(),
                     title=exercise_req.title,
                     constraint_type=exercise_req.constraint_type,
@@ -154,7 +154,7 @@ class ExerciseService:
                 exercise.save()
 
                 points = [
-                    RangeExerciseDataPoint(
+                    ExerciseDataPoint(
                         x=point.x,
                         y=point.y,
                         size=point.size,
@@ -163,17 +163,17 @@ class ExerciseService:
                     for point in exercise_req.points
                 ]
 
-                RangeExerciseDataPoint.objects.bulk_create(points)
+                ExerciseDataPoint.objects.bulk_create(points)
 
                 exercise.refresh_from_db()
 
-                exercises.append(RangeExerciseResponseDto.from_model(exercise))
+                exercises.append(ExerciseResponseDto.from_model(exercise))
 
         return exercises
 
     @staticmethod
     def evaluate_solution(
-        exercise_id: UUID, solution: List[RangeExerciseDataPointDto]
+        exercise_id: UUID, solution: List[ExerciseDataPointDto]
     ) -> bool:
         if not solution:
             raise ValidationError("Solution must contain at least one data point.")
@@ -181,7 +181,7 @@ class ExerciseService:
         y_values = [point.y for point in solution]
         min_y, max_y = min(y_values), max(y_values)
 
-        exercise = RangeExercise.objects.get(id=exercise_id)
+        exercise = Exercise.objects.get(id=exercise_id)
 
         lower_bound, upper_bound = exercise.lower_bound, exercise.upper_bound
 

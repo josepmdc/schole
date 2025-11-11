@@ -16,7 +16,7 @@ def assert_never(arg: Never) -> Never:
     raise ValidationError(f"unexpected constraint_type {arg}")
 
 
-class RangeExercise(models.Model):
+class Exercise(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order = models.PositiveIntegerField(unique=True)
     title = models.CharField(max_length=200)
@@ -37,7 +37,7 @@ class RangeExercise(models.Model):
 
     # this is for helping with type annotations/autocomplete since Django generates it on the fly
     if TYPE_CHECKING:
-        data_points: models.QuerySet["RangeExerciseDataPoint"]
+        data_points: models.QuerySet["ExerciseDataPoint"]
 
     def clean(self) -> None:
         super().clean()
@@ -79,11 +79,11 @@ class RangeExercise(models.Model):
         super().save(*args, **kwargs)
 
 
-class RangeExerciseDataPoint(models.Model):
+class ExerciseDataPoint(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     x = models.FloatField(help_text="x coordinate")
     y = models.FloatField(help_text="y coordinate")
     size = models.FloatField(help_text="Size of the bubble")
     exercise = models.ForeignKey(
-        RangeExercise, on_delete=models.CASCADE, related_name="data_points"
+        Exercise, on_delete=models.CASCADE, related_name="data_points"
     )

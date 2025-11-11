@@ -9,27 +9,27 @@ from django.core.exceptions import (
     ObjectDoesNotExist,
 )
 
-from lessons.serializers.exercises import (
+from exercises.serializers.exercises import (
     EvaluateSolutionResponseSerializer,
     EvaluateSolutionSerializer,
     NextExerciseSerializer,
-    RangeExerciseCreateManySerializer,
-    RangeExerciseManyResponseSerializer,
-    RangeExerciseResponseSerializer,
+    ExerciseCreateManySerializer,
+    ExerciseManyResponseSerializer,
+    ExerciseResponseSerializer,
 )
-from lessons.services.service import ExerciseService, RangeExerciseDataPointDto
+from exercises.services.service import ExerciseService, ExerciseDataPointDto
 
 
-class RangeExerciseViewSet(viewsets.ViewSet):
+class ExerciseViewSet(viewsets.ViewSet):
     @extend_schema(
-        responses=RangeExerciseResponseSerializer,
+        responses=ExerciseResponseSerializer,
         description="Get a range exercise by ID",
     )
     def retrieve(self, _, pk: UUID) -> Response:
         try:
             exercise = ExerciseService.get(pk)
             return Response(
-                RangeExerciseResponseSerializer.from_dto(exercise),
+                ExerciseResponseSerializer.from_dto(exercise),
                 status=status.HTTP_200_OK,
             )
         except ObjectDoesNotExist:
@@ -44,14 +44,14 @@ class RangeExerciseViewSet(viewsets.ViewSet):
             )
 
     @extend_schema(
-        responses=RangeExerciseResponseSerializer, description="Get the first exercise"
+        responses=ExerciseResponseSerializer, description="Get the first exercise"
     )
     @action(methods=["GET"], url_path="first", detail=False)
     def retrieve_first(self, _) -> Response:
         try:
             exercise = ExerciseService.get_first()
             return Response(
-                RangeExerciseResponseSerializer.from_dto(exercise),
+                ExerciseResponseSerializer.from_dto(exercise),
                 status=status.HTTP_200_OK,
             )
         except ObjectDoesNotExist:
@@ -83,23 +83,23 @@ class RangeExerciseViewSet(viewsets.ViewSet):
         )
 
     @extend_schema(
-        request=RangeExerciseCreateManySerializer,
-        responses=RangeExerciseManyResponseSerializer,
+        request=ExerciseCreateManySerializer,
+        responses=ExerciseManyResponseSerializer,
         description="Create new exercises",
     )
     def create(self, request: Request) -> Response:
         try:
-            serializer = RangeExerciseCreateManySerializer(data=request.data)
+            serializer = ExerciseCreateManySerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
 
-            assert isinstance(serializer, RangeExerciseCreateManySerializer)
+            assert isinstance(serializer, ExerciseCreateManySerializer)
             assert isinstance(serializer.validated_data, dict)
 
-            exercises = ExerciseService.create_range_exercise(serializer.to_dto())
+            exercises = ExerciseService.create_exercises(serializer.to_dto())
 
             return Response(
                 [
-                    RangeExerciseResponseSerializer.from_dto(exercise)
+                    ExerciseResponseSerializer.from_dto(exercise)
                     for exercise in exercises
                 ],
                 status=status.HTTP_201_CREATED,
@@ -129,7 +129,7 @@ class RangeExerciseViewSet(viewsets.ViewSet):
             assert isinstance(serializer.validated_data, dict)
 
             points = [
-                RangeExerciseDataPointDto(**point)
+                ExerciseDataPointDto(**point)
                 for point in serializer.validated_data["solution"]
             ]
 

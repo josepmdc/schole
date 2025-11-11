@@ -3,19 +3,19 @@ from django.test import TestCase
 from django.db import transaction
 from uuid import uuid4
 
-from lessons.models.range_exercise import (
-    RangeExercise,
-    RangeExerciseDataPoint,
+from exercises.models.range_exercise import (
+    Exercise,
+    ExerciseDataPoint,
     ConstraintType,
 )
 
 
-class RangeExerciseValidationsTest(TestCase):
+class ExerciseValidationsTest(TestCase):
     def _create_test_exercise(
         self, constraint_type, lower_bound, upper_bound, id=uuid4()
-    ) -> RangeExercise:
+    ) -> Exercise:
         """creates a range exercise with sane defaults for testing"""
-        return RangeExercise(
+        return Exercise(
             id=id,
             title="title",
             constraint_type=constraint_type,
@@ -144,13 +144,13 @@ class RangeExerciseValidationsTest(TestCase):
         """given an exercise we can add data point to it"""
         exercise = self._create_test_exercise(ConstraintType.BETWEEN, 2.2, 4.3)
         data_points = [
-            RangeExerciseDataPoint(x=1 + i, y=2 + i, size=3 + i, exercise=exercise)
+            ExerciseDataPoint(x=1 + i, y=2 + i, size=3 + i, exercise=exercise)
             for i in range(0, 5)
         ]
 
         with transaction.atomic():
             exercise.save()
-            RangeExerciseDataPoint.objects.bulk_create(data_points)
+            ExerciseDataPoint.objects.bulk_create(data_points)
 
         res = list(exercise.data_points.all())
         self.assertEqual(res, data_points)
