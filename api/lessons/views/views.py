@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from django.core.exceptions import ValidationError as DjangoValidationError, ObjectDoesNotExist
 
-from lessons.serializers.lesson import EvaluateSolutionResponseSerializer, EvaluateSolutionSerializer, RangeExerciseCreateSerializer, RangeExerciseResponseSerializer
+from lessons.serializers.lesson import EvaluateSolutionResponseSerializer, EvaluateSolutionSerializer, NextExerciseSerializer, RangeExerciseCreateSerializer, RangeExerciseResponseSerializer
 from lessons.services.service import ExerciseService, RangeExerciseDataPointDto
 
 class RangeExerciseViewSet(viewsets.ViewSet):
@@ -56,18 +56,19 @@ class RangeExerciseViewSet(viewsets.ViewSet):
             )
 
     @extend_schema(
-        responses={200: RangeExerciseResponseSerializer, 204: None},
+        responses=NextExerciseSerializer,
         description="Get the next exercise after the current one",
     )
     @action(methods=["GET"], url_path="next", detail=True)
     def retrieve_next(self, _, pk: UUID) -> Response:
-        exercise = ExerciseService.get_next(pk)
+        next_id = ExerciseService.get_next(pk)
 
-        if exercise is None:
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        data = {
+            'id': next_id, 
+        }
 
         return Response(
-            RangeExerciseResponseSerializer.from_dto(exercise),
+            data=data,
             status=status.HTTP_200_OK,
         )
 

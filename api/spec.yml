@@ -90,6 +90,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/EvaluateSolutionResponse'
           description: ''
+  /api/exercises/{id}/next/:
+    get:
+      operationId: exercises_next_retrieve
+      description: Get the next exercise after the current one
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - exercises
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NextExercise'
+          description: ''
+  /api/exercises/first/:
+    get:
+      operationId: exercises_first_retrieve
+      description: Get the first exercise
+      tags:
+      - exercises
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RangeExerciseResponse'
+          description: ''
   /api/schema/:
     get:
       operationId: schema_retrieve
@@ -264,6 +304,15 @@ components:
           type: boolean
       required:
       - is_correct
+    NextExercise:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - id
     RangeExerciseCreate:
       type: object
       properties:

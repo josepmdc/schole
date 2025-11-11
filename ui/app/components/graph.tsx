@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import * as d3 from "d3";
 
-const MARGIN = { top: 30, right: 30, bottom: 80, left: 100 };
+const MARGIN = { top: 30, right: 75, bottom: 80, left: 100 };
 const BUBBLE_MIN_SIZE = 4;
 const BUBBLE_MAX_SIZE = 40;
 
@@ -113,20 +113,22 @@ export const BubblePlot = ({ width, height, data, setData, targets }: BubblePlot
       .text("Output Value (Y)");
   }, [xScale, yScale, boundsHeight, boundsWidth]);
 
+  // render min max lines
   useEffect(() => {
     if (!rangeLinesRef.current || data.length == 0) return;
 
     const yValues = data.map((p) => p.y);
-    console.log(yValues);
+
     const [min, max] = [Math.min(...yValues), Math.max(...yValues)];
-    console.log(min, max);
 
     const svgElement = d3.select(rangeLinesRef.current);
     svgElement.selectAll("*").remove();
 
+    const maxColor = "#3da1e3";
+
     svgElement
       .append("line")
-      .attr("stroke", "#3da1e3")
+      .attr("stroke", maxColor)
       .attr("stroke-width", 2)
       .attr("x1", 0)
       .attr("y1", yScale(max))
@@ -134,13 +136,31 @@ export const BubblePlot = ({ width, height, data, setData, targets }: BubblePlot
       .attr("y2", yScale(max));
 
     svgElement
+      .append("text")
+      .attr("x", boundsWidth + 10)
+      .attr("y", yScale(max) + 4)
+      .attr("font-size", 12)
+      .attr("fill", maxColor)
+      .text(`MAX (${Math.round(max)})`);
+
+    const minColor = "#e3743d";
+
+    svgElement
       .append("line")
-      .attr("stroke", "#e3743d")
+      .attr("stroke", minColor)
       .attr("stroke-width", 2)
       .attr("x1", 0)
       .attr("y1", yScale(min))
       .attr("x2", boundsWidth)
       .attr("y2", yScale(min));
+
+    svgElement
+      .append("text")
+      .attr("x", boundsWidth + 10)
+      .attr("y", yScale(min) + 4)
+      .attr("font-size", 12)
+      .attr("fill", minColor)
+      .text(`MIN (${Math.round(min)})`);
   }, [data, rangeLinesRef, yScale, width]);
 
   // Drag behavior
@@ -149,24 +169,22 @@ export const BubblePlot = ({ width, height, data, setData, targets }: BubblePlot
 
     const getWithinBounds = (limit: number, value: number) => Math.max(0, Math.min(limit, value));
 
-    const drag = d3
-      .drag<SVGCircleElement, string>()
-      .on("drag", function (e) {
-        // Keep within bounds
-        const newX = getWithinBounds(boundsWidth, e.x);
-        const newY = getWithinBounds(boundsHeight, e.y);
+    const drag = d3.drag<SVGCircleElement, string>().on("drag", function (e, draggedPointId) {
+      // Keep within bounds
+      const newX = getWithinBounds(boundsWidth, e.x);
+      const newY = getWithinBounds(boundsHeight, e.y);
 
-        // Update circle position
-        d3.select(this).attr("cx", newX).attr("cy", newY);
-      })
-      .on("end", (e, draggedPointId) => {
-        const x = xScale.invert(getWithinBounds(boundsWidth, e.x));
-        const y = yScale.invert(getWithinBounds(boundsHeight, e.y));
+      // Update circle position
+      d3.select(this).attr("cx", newX).attr("cy", newY);
 
-        setData((currentPoints) =>
-          currentPoints.map((p) => (p.id === draggedPointId ? { ...p, x: x, y: y } : p)),
-        );
-      });
+      // we need to invert the coordinates again since our data is in cartesian coordinates
+      const newData = { x: xScale.invert(newX), y: yScale.invert(newY) };
+
+      // update data with new coordinates
+      setData((currentPoints) =>
+        currentPoints.map((p) => (p.id === draggedPointId ? { ...p, ...newData } : p)),
+      );
+    });
 
     d3.select(bubblesRef.current)
       .selectAll("circle")

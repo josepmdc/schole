@@ -1,4 +1,5 @@
 from typing import cast
+from uuid import UUID
 from rest_framework import serializers
 from lessons.models.range_exercise import ConstraintType
 from lessons.services.service import RangeExerciseCreateDto, RangeExerciseDataPointCreateDto, RangeExerciseDataPointDto, RangeExerciseResponseDto
@@ -90,3 +91,6 @@ class EvaluateSolutionSerializer(serializers.Serializer):
 
 class EvaluateSolutionResponseSerializer(serializers.Serializer):
     is_correct = serializers.BooleanField()
+
+class NextExerciseSerializer(serializers.Serializer):
+    id = serializers.UUIDField(allow_null=True)

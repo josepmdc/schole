@@ -86,7 +86,13 @@ class ExerciseService:
 
     @staticmethod
     def get_first() -> RangeExerciseResponseDto:
-        exercise = RangeExercise.objects.prefetch_related('data_points').first()
+        exercise = (
+            RangeExercise
+            .objects
+            .prefetch_related('data_points')
+            .order_by('order')
+            .first()
+        )
 
         if exercise is None:
             raise ObjectDoesNotExist(f"could not find any exercise")
@@ -94,7 +100,7 @@ class ExerciseService:
         return RangeExerciseResponseDto.from_model(exercise)
 
     @staticmethod
-    def get_next(exercise_id: UUID) -> RangeExerciseResponseDto | None:
+    def get_next(exercise_id: UUID) -> UUID | None:
         current = RangeExercise.objects.get(id=exercise_id)
 
         if current is None:
@@ -105,12 +111,13 @@ class ExerciseService:
             .prefetch_related('data_points')
             .filter(order__gt=current.order)
             .order_by('order')
+            .values_list('id', flat=True)
             .first()
         )
 
         if next is None:
             return None
-        return RangeExerciseResponseDto.from_model(next)
+        return next
 
     @staticmethod
     def create_range_exercise(data: RangeExerciseCreateDto) -> RangeExerciseResponseDto:
