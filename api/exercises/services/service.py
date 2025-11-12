@@ -125,8 +125,6 @@ class ExerciseService:
             .first()
         )
 
-        if next is None:
-            return None
         return next
 
     @staticmethod
