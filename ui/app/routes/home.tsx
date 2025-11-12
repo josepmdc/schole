@@ -25,10 +25,10 @@ export default function Home() {
           <div className="flex flex-col rounded-lg border border-black shadow-xl m-5 items-center justify-center p-5 lg:p-20 min-w-4/6 min-h-4/6">
             <h1 className="text-2xl font-extrabold p-3">Welcome to Range Explorer!</h1>
             <p className="text-justify text-lg p-3">
-              Discover the power of graphs and learn how to understand range in data visualization.
-              In this interactive web app, you’ll explore how data points behave on a graph. Your
-              task is simple: move the points to match the target range. You’ll get real-time
-              feedback and guidance as you experiment.
+              Learn about the meaning of range in data visualization. In this interactive web app,
+              you’ll explore how data points behave on a graph. Your task is simple: move the points
+              to match the target range. You’ll get real-time feedback and guidance as you
+              experiment.
             </p>
             <h2 className="text-lg font-extrabold p-3">What is the "Range”?</h2>
             <p className="text-justify text-lg p-3">
